@@ -40,10 +40,37 @@ class Collection
      */
     public function getList(int $start = 1, int $end = 50, array $queryParams = []): array
     {
+        $queryParams['perPage'] = $end;
         $getParams = !empty($queryParams) ? http_build_query($queryParams) : "";
         $response = $this->doRequest($this->url . "/api/collections/" . $this->collection . "/records?" . $getParams, 'GET');
 
         return json_decode($response, JSON_FORCE_OBJECT);
+    }
+
+    /**
+     * @param string $recordId
+     * @param string $field
+     * @param string $filepath
+     * @return void
+     */
+    public function upload(string $recordId, string $field, string $filepath): void
+    {
+        $ch = curl_init($this->url . "/api/collections/".$this->collection."/records/" . $recordId);
+        curl_setopt_array($ch, array(
+            CURLOPT_CUSTOMREQUEST => 'PATCH',
+            CURLOPT_POSTFIELDS => array(
+                $field => new \CURLFile($filepath)
+            )
+        ));
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        $headers = array('Content-Type: multipart/form-data');
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $response = curl_exec($ch);
+        // var_dump($response);
     }
 
     /**
